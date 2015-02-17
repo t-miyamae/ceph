@@ -4,7 +4,7 @@ SHEC erasure code plugin
 
 The *shec* plugin encapsulates the `multiple SHEC
 <https://wiki.ceph.com/Planning/Blueprints/Hammer/Shingled_Erasure_Code_(SHEC)>`_
-library. It allows us to recover data more efficiently than Reed Solomon.
+library. It allows ceph to recover data more efficiently than Reed Solomon.
 
 Create an shec profile
 ======================
