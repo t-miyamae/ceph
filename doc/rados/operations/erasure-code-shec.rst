@@ -1,6 +1,6 @@
-=======================
-ISA erasure code plugin
-=======================
+========================
+SHEC erasure code plugin
+========================
 
 The *isa* plugin is encapsulates the `ISA
 <https://01.org/intel%C2%AE-storage-acceleration-library-open-source-version/>`_
