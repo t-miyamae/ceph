@@ -2,20 +2,21 @@
 SHEC erasure code plugin
 ========================
 
-The *isa* plugin is encapsulates the `ISA
-<https://01.org/intel%C2%AE-storage-acceleration-library-open-source-version/>`_
-library. It only runs on Intel processors.
+The *shec* plugin encapsulates the `multiple SHEC
+<https://wiki.ceph.com/Planning/Blueprints/Hammer/Shingled_Erasure_Code_(SHEC)>`_
+library. It allows us to recover data more efficiently than Reed Solomon.
 
-Create an isa profile
-=====================
+Create an shec profile
+======================
 
-To create a new *jerasure* erasure code profile::
+To create a new *shec* erasure code profile::
 
         ceph osd erasure-code-profile set {name} \
-             plugin=isa \
-             technique={reed_sol_van|cauchy} \
+             plugin=shec \
+             technique={multiple} \
              [k={data-chunks}] \
              [m={coding-chunks}] \
+             [c={durability-estimator}] \
              [ruleset-root={root}] \
              [ruleset-failure-domain={bucket-type}] \
              [directory={directory}] \
