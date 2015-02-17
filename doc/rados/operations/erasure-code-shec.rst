@@ -13,7 +13,6 @@ To create a new *shec* erasure code profile::
 
         ceph osd erasure-code-profile set {name} \
              plugin=shec \
-             technique={multiple} \
              [k={data-chunks}] \
              [m={coding-chunks}] \
              [c={durability-estimator}] \
@@ -24,37 +23,34 @@ To create a new *shec* erasure code profile::
 
 Where:
 
-``k={data chunks}``
+``k={data-chunks}``
 
 :Description: Each object is split in **data-chunks** parts,
               each stored on a different OSD.
 
 :Type: Integer
 :Required: No.
-:Default: 7
+:Default: 4
 
 ``m={coding-chunks}``
 
-:Description: Compute **coding chunks** for each object and store them
-              on different OSDs. The number of coding chunks is also
+:Description: Compute **coding-chunks** for each object and store them on
+              different OSDs. The number of **coding-chunks** is not necessarily
               the number of OSDs that can be down without losing data.
 
 :Type: Integer
 :Required: No.
 :Default: 3
 
-``technique={reed_sol_van|cauchy}``
+``c={durability-estimator}``
 
-:Description: The ISA plugin comes in two `Reed Solomon
-              <https://en.wikipedia.org/wiki/Reed%E2%80%93Solomon_error_correction>`_
-              forms. If *reed_sol_van* is set, it is `Vandermonde
-              <https://en.wikipedia.org/wiki/Vandermonde_matrix>`_, if
-              *cauchy* is set, it is `Cauchy
-              <https://en.wikipedia.org/wiki/Cauchy_matrix>`_.
+:Description: The number of parity chunks that cover each data chunk in a
+              calculation range, which is used as an estimator of durability.
+              For instance, if c is 2, 2 OSDs can be down without losing data.
 
-:Type: String
+:Type: Integer
 :Required: No.
-:Default: reed_sol_van
+:Default: 2
 
 ``ruleset-root={root}``
 
