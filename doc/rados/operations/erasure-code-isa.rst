@@ -2,14 +2,14 @@
 ISA erasure code plugin
 =======================
 
-The *isa* plugin is encapsulates the `ISA
+The *isa* plugin encapsulates the `ISA
 <https://01.org/intel%C2%AE-storage-acceleration-library-open-source-version/>`_
 library. It only runs on Intel processors.
 
 Create an isa profile
 =====================
 
-To create a new *jerasure* erasure code profile::
+To create a new *isa* erasure code profile::
 
         ceph osd erasure-code-profile set {name} \
              plugin=isa \
@@ -23,7 +23,7 @@ To create a new *jerasure* erasure code profile::
 
 Where:
 
-``k={data chunks}``
+``k={data-chunks}``
 
 :Description: Each object is split in **data-chunks** parts,
               each stored on a different OSD.
@@ -34,8 +34,8 @@ Where:
 
 ``m={coding-chunks}``
 
-:Description: Compute **coding chunks** for each object and store them
-              on different OSDs. The number of coding chunks is also
+:Description: Compute **coding-chunks** for each object and store them
+              on different OSDs. The number of **coding-chunks** is also
               the number of OSDs that can be down without losing data.
 
 :Type: Integer
