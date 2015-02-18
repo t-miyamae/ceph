@@ -102,7 +102,7 @@ In order to improve space efficiency, you should increase k or decrease m.
 ::
 
         space efficiency of SHEC(4,3,2) = 4/(4+3) = 0.57
-        to improve space efficiency, SHEC(5,3,2) (= SHEC(4+1,3,2)) or SHEC(4,2,2) (= SHEC(4,3-1,2)) can be selected.
+        SHEC(5,3,2) or SHEC(4,2,2) improves SHEC(4,3,2)'s space efficiency
 
 Durability
 ----------
