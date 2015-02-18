@@ -44,9 +44,9 @@ Where:
 
 ``c={durability-estimator}``
 
-:Description: The number of parity chunks that cover each data chunk in a
-              calculation range, which is used as an estimator of durability.
-              For instance, if c is 2, 2 OSDs can be down without losing data.
+:Description: The number of parity chunks each of which includes each data chunk in its
+              calculation range. The number is used as an **estimator of durability**.
+              For instance, if c=2, 2 OSDs can be down without losing data.
 
 :Type: Integer
 :Required: No.
