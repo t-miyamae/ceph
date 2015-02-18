@@ -122,6 +122,7 @@ Erasure code profile examples
 =============================
 
 ::
+
         $ ceph osd erasure-code-profile set SHECprofile \
              plugin=shec \
              k=8 m=4 c=3 \
