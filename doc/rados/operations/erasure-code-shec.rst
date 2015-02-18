@@ -89,3 +89,39 @@ Where:
 :Type: String
 :Required: No.
 
+Guidance of SHEC's properties
+=============================
+
+Space Efficiency
+----------------
+
+Space efficiency is a ratio of data chunks to all ones in a object and
+represented as k/(k+m).
+In order to improve space efficiency, you should increase k or decrease m.
+
+        space efficiency of SHEC(4,3,2) = 4/(4+3) = 0.57
+
+Durability
+----------
+
+The third parameter (=c) of SHEC is a durability estimator, which approximates
+the number of OSDs that can be down without losing data.
+
+        durability of SHEC(4,3,2) = 2
+
+Recovery Efficiency
+-------------------
+
+Recovery efficiency cannot be calculated so easily, but increasing m without
+increasing c achieves improvement of recovery efficiency.
+
+        layout change of SHEC(4,3,2) -> SHEC(4,4,2) gains more recovery efficiency
+
+Erasure code profile examples
+=============================
+
+        $ ceph osd erasure-code-profile set SHECprofile \
+             plugin=shec \
+             k=8 m=4 c=2 \
+             ruleset-failure-domain=host
+        $ ceph osd pool create shecpool 256 256 erasure SHECprofile
