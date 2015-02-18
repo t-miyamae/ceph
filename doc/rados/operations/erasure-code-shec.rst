@@ -115,8 +115,8 @@ the number of OSDs that can be down without losing data.
 Recovery Efficiency
 -------------------
 
-Recovery efficiency cannot be calculated so easily as others, but at least
-increasing m without increasing c achieves improvement of recovery efficiency.
+Describing calculation of recovery efficiency is beyond the scope of this document,
+but at least increasing m without increasing c achieves improvement of recovery efficiency.
 (However, we must pay attention to the sacrifice of space efficiency in this case.)
 
 ``SHEC(4,2,2) -> SHEC(4,3,2) : achieves improvement of recovery efficiency``
