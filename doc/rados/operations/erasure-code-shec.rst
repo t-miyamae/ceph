@@ -45,7 +45,7 @@ Where:
 ``c={durability-estimator}``
 
 :Description: The number of parity chunks each of which includes each data chunk in its
-              calculation range. The number is used as an **estimator of durability**.
+              calculation range. The number is used as a **durability estimator**.
               For instance, if c=2, 2 OSDs can be down without losing data.
 
 :Type: Integer
@@ -107,7 +107,7 @@ In order to improve space efficiency, you should increase k or decrease m.
 Durability
 ----------
 
-The third parameter (=c) of SHEC is a durability estimator, which approximates
+The third parameter of SHEC (=c) is a durability estimator, which approximates
 the number of OSDs that can be down without losing data.
 
 ``durability of SHEC(4,3,2) = 2``
