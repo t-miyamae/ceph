@@ -6,7 +6,7 @@ The *shec* plugin encapsulates the `multiple SHEC
 <https://wiki.ceph.com/Planning/Blueprints/Hammer/Shingled_Erasure_Code_(SHEC)>`_
 library. It allows ceph to recover data more efficiently than Reed Solomon.
 
-Create an shec profile
+Create an SHEC profile
 ======================
 
 To create a new *shec* erasure code profile::
@@ -89,8 +89,8 @@ Where:
 :Type: String
 :Required: No.
 
-Guidance of SHEC's properties
-=============================
+Brief description of SHEC's layouts
+===================================
 
 Space Efficiency
 ----------------
@@ -114,14 +114,15 @@ Recovery Efficiency
 
 Recovery efficiency cannot be calculated so easily, but increasing m without
 increasing c achieves improvement of recovery efficiency.
+(However, we must pay attention to the sacrifice of space efficiency in this case.)
 
-        layout change of SHEC(4,3,2) -> SHEC(4,4,2) gains more recovery efficiency
+        layout change of SHEC(4,2,2) -> SHEC(4,3,2) gains more recovery efficiency
 
 Erasure code profile examples
 =============================
 
         $ ceph osd erasure-code-profile set SHECprofile \
              plugin=shec \
-             k=8 m=4 c=2 \
+             k=8 m=4 c=3 \
              ruleset-failure-domain=host
         $ ceph osd pool create shecpool 256 256 erasure SHECprofile
