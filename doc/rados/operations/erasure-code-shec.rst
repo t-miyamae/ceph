@@ -1,21 +1,21 @@
-=======================
-ISA erasure code plugin
-=======================
+========================
+SHEC erasure code plugin
+========================
 
-The *isa* plugin is encapsulates the `ISA
-<https://01.org/intel%C2%AE-storage-acceleration-library-open-source-version/>`_
-library. It only runs on Intel processors.
+The *shec* plugin encapsulates the `multiple SHEC
+<https://wiki.ceph.com/Planning/Blueprints/Hammer/Shingled_Erasure_Code_(SHEC)>`_
+library. It allows ceph to recover data more efficiently than Reed Solomon codes.
 
-Create an isa profile
-=====================
+Create an SHEC profile
+======================
 
-To create a new *jerasure* erasure code profile::
+To create a new *shec* erasure code profile::
 
         ceph osd erasure-code-profile set {name} \
-             plugin=isa \
-             technique={reed_sol_van|cauchy} \
+             plugin=shec \
              [k={data-chunks}] \
              [m={coding-chunks}] \
+             [c={durability-estimator}] \
              [ruleset-root={root}] \
              [ruleset-failure-domain={bucket-type}] \
              [directory={directory}] \
@@ -23,37 +23,34 @@ To create a new *jerasure* erasure code profile::
 
 Where:
 
-``k={data chunks}``
+``k={data-chunks}``
 
 :Description: Each object is split in **data-chunks** parts,
               each stored on a different OSD.
 
 :Type: Integer
 :Required: No.
-:Default: 7
+:Default: 4
 
 ``m={coding-chunks}``
 
-:Description: Compute **coding chunks** for each object and store them
-              on different OSDs. The number of coding chunks is also
-              the number of OSDs that can be down without losing data.
+:Description: Compute **coding-chunks** for each object and store them on
+              different OSDs. The number of **coding-chunks** does not necessarily
+              equal the number of OSDs that can be down without losing data.
 
 :Type: Integer
 :Required: No.
 :Default: 3
 
-``technique={reed_sol_van|cauchy}``
+``c={durability-estimator}``
 
-:Description: The ISA plugin comes in two `Reed Solomon
-              <https://en.wikipedia.org/wiki/Reed%E2%80%93Solomon_error_correction>`_
-              forms. If *reed_sol_van* is set, it is `Vandermonde
-              <https://en.wikipedia.org/wiki/Vandermonde_matrix>`_, if
-              *cauchy* is set, it is `Cauchy
-              <https://en.wikipedia.org/wiki/Cauchy_matrix>`_.
+:Description: The number of parity chunks each of which includes each data chunk in its
+              calculation range. The number is used as a **durability estimator**.
+              For instance, if c=2, 2 OSDs can be down without losing data.
 
-:Type: String
+:Type: Integer
 :Required: No.
-:Default: reed_sol_van
+:Default: 2
 
 ``ruleset-root={root}``
 
@@ -92,3 +89,45 @@ Where:
 :Type: String
 :Required: No.
 
+Brief description of SHEC's layouts
+===================================
+
+Space Efficiency
+----------------
+
+Space efficiency is a ratio of data chunks to all ones in a object and
+represented as k/(k+m).
+In order to improve space efficiency, you should increase k or decrease m.
+
+::
+
+        space efficiency of SHEC(4,3,2) = 4/(4+3) = 0.57
+        SHEC(5,3,2) or SHEC(4,2,2) improves SHEC(4,3,2)'s space efficiency
+
+Durability
+----------
+
+The third parameter of SHEC (=c) is a durability estimator, which approximates
+the number of OSDs that can be down without losing data.
+
+``durability estimator of SHEC(4,3,2) = 2``
+
+Recovery Efficiency
+-------------------
+
+Recovery efficiency cannot be calculated so easily as others, but at least
+increasing m without increasing c achieves improvement of recovery efficiency.
+(However, we must pay attention to the sacrifice of space efficiency in this case.)
+
+``SHEC(4,2,2) -> SHEC(4,3,2) : achieves improvement of recovery efficiency``
+
+Erasure code profile examples
+=============================
+
+::
+
+        $ ceph osd erasure-code-profile set SHECprofile \
+             plugin=shec \
+             k=8 m=4 c=3 \
+             ruleset-failure-domain=host
+        $ ceph osd pool create shecpool 256 256 erasure SHECprofile
