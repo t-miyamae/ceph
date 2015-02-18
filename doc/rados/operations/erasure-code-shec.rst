@@ -35,8 +35,8 @@ Where:
 ``m={coding-chunks}``
 
 :Description: Compute **coding-chunks** for each object and store them on
-              different OSDs. The number of **coding-chunks** is not necessarily
-              the number of OSDs that can be down without losing data.
+              different OSDs. The number of **coding-chunks** does not necessarily
+              equal the number of OSDs that can be down without losing data.
 
 :Type: Integer
 :Required: No.
