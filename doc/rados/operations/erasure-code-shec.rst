@@ -99,7 +99,7 @@ Space efficiency is a ratio of data chunks to all ones in a object and
 represented as k/(k+m).
 In order to improve space efficiency, you should increase k or decrease m.
 
-        space efficiency of SHEC(4,3,2) = 4/(4+3) = 0.57
+``space efficiency of SHEC(4,3,2) = 4/(4+3) = 0.57``
 
 Durability
 ----------
