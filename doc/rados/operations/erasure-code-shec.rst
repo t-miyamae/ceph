@@ -110,16 +110,16 @@ Durability
 The third parameter of SHEC (=c) is a durability estimator, which approximates
 the number of OSDs that can be down without losing data.
 
-``durability of SHEC(4,3,2) = 2``
+``durability estimator of SHEC(4,3,2) = 2``
 
 Recovery Efficiency
 -------------------
 
-Recovery efficiency cannot be calculated so easily, but increasing m without
-increasing c achieves improvement of recovery efficiency.
+Recovery efficiency cannot be calculated so easily as others, but at least
+increasing m without increasing c achieves improvement of recovery efficiency.
 (However, we must pay attention to the sacrifice of space efficiency in this case.)
 
-``layout change of SHEC(4,2,2) -> SHEC(4,3,2) gains more recovery efficiency``
+``SHEC(4,2,2) -> SHEC(4,3,2) : achieves improvement of recovery efficiency``
 
 Erasure code profile examples
 =============================
