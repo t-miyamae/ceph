@@ -59,6 +59,7 @@ public:
     }
     int err = interface->init(parameters);
     if (err) {
+      delete interface;
       return err;
     }
     *erasure_code = ErasureCodeInterfaceRef(interface);
