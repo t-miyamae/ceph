@@ -229,6 +229,25 @@ unittest_erasure_code_shec_thread_LDADD += -ldl
 endif
 check_TESTPROGRAMS += unittest_erasure_code_shec_thread
 
+unittest_erasure_code_shec432_all_SOURCES = \
+        test/erasure-code/TestErasureCodeShec432_all.cc \
+        ${shec_sources}
+unittest_erasure_code_shec432_all_CFLAGS = ${libec_shec_la_CFLAGS} \
+        -I$(srcdir)/erasure-code/jerasure/jerasure/include \
+        -I$(srcdir)/erasure-code/jerasure/gf-complete/include \
+        -I$(srcdir)/erasure-code/jerasure \
+        -I$(srcdir)/erasure-code/shec
+unittest_erasure_code_shec432_all_CXXFLAGS = ${libec_shec_la_CXXFLAGS} $(UNITTEST_CXXFLAGS) \
+        -I$(srcdir)/erasure-code/jerasure/jerasure/include \
+        -I$(srcdir)/erasure-code/jerasure/gf-complete/include \
+        -I$(srcdir)/erasure-code/jerasure \
+        -I$(srcdir)/erasure-code/shec
+unittest_erasure_code_shec432_all_LDADD = $(LIBOSD) $(LIBCOMMON) $(UNITTEST_LDADD) $(CEPH_GLOBAL)
+if LINUX
+unittest_erasure_code_shec432_all_LDADD += -ldl
+endif
+check_PROGRAMS += unittest_erasure_code_shec432_all
+
 unittest_erasure_code_example_SOURCES = \
 	erasure-code/ErasureCode.cc \
 	test/erasure-code/TestErasureCodeExample.cc
