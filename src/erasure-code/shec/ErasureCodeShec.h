@@ -115,7 +115,6 @@ public:
 			  char **coding,
 			  int blocksize) = 0;
   virtual unsigned get_alignment() const = 0;
-  virtual int parse(const ErasureCodeProfile &profile) = 0;
   virtual void prepare() = 0;
 
   virtual int shec_matrix_decode(int *erased, int *avails,
@@ -123,6 +122,8 @@ public:
   virtual int* shec_reedsolomon_coding_matrix(int is_single);
 
 private:
+  virtual int parse(const ErasureCodeProfile &profile) = 0;
+
   virtual double shec_calc_recovery_efficiency1(int k, int m1, int m2, int c1, int c2);
   virtual int shec_make_decoding_matrix(bool prepare,
                                         int *want, int *avails,
@@ -151,8 +152,9 @@ public:
 			  char **coding,
 			  int blocksize);
   virtual unsigned get_alignment() const;
-  virtual int parse(const ErasureCodeProfile &profile);
   virtual void prepare();
+private:
+  virtual int parse(const ErasureCodeProfile &profile);
 };
 
 #endif

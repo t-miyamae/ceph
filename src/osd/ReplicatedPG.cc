@@ -4118,7 +4118,7 @@ int ReplicatedPG::do_osd_ops(OpContext *ctx, vector<OSDOp>& ops)
       ++ctx->num_write;
       {
 	tracepoint(osd, do_osd_op_pre_setallochint, soid.oid.name.c_str(), soid.snap.val, op.alloc_hint.expected_object_size, op.alloc_hint.expected_write_size);
-        if (!(get_min_peer_features() & CEPH_FEATURE_OSD_SET_ALLOC_HINT)) { 
+        if (!(get_min_upacting_features() & CEPH_FEATURE_OSD_SET_ALLOC_HINT)) { 
           result = -EOPNOTSUPP;
           break;
         }
@@ -4211,8 +4211,7 @@ int ReplicatedPG::do_osd_ops(OpContext *ctx, vector<OSDOp>& ops)
 	} else {
 	  t->write(soid, op.extent.offset, op.extent.length, osd_op.indata, op.flags);
 	}
-	write_update_size_and_usage(ctx->delta_stats, oi, ctx->modified_ranges,
-				    op.extent.offset, op.extent.length, true);
+
 	maybe_create_new_object(ctx);
 	if (op.extent.offset == 0 && op.extent.length >= oi.size)
 	  obs.oi.set_data_digest(osd_op.indata.crc32c(-1));
@@ -4220,19 +4219,22 @@ int ReplicatedPG::do_osd_ops(OpContext *ctx, vector<OSDOp>& ops)
 	  obs.oi.set_data_digest(osd_op.indata.crc32c(obs.oi.data_digest));
 	else
 	  obs.oi.clear_data_digest();
+	write_update_size_and_usage(ctx->delta_stats, oi, ctx->modified_ranges,
+				    op.extent.offset, op.extent.length, true);
+
       }
       break;
       
     case CEPH_OSD_OP_WRITEFULL:
       ++ctx->num_write;
       { // write full object
-	tracepoint(osd, do_osd_op_pre_writefull, soid.oid.name.c_str(), soid.snap.val, oi.size, op.extent.offset, op.extent.length);
+	tracepoint(osd, do_osd_op_pre_writefull, soid.oid.name.c_str(), soid.snap.val, oi.size, 0, op.extent.length);
 
 	if (op.extent.length != osd_op.indata.length()) {
 	  result = -EINVAL;
 	  break;
 	}
-	result = check_offset_and_length(op.extent.offset, op.extent.length, cct->_conf->osd_max_object_size);
+	result = check_offset_and_length(0, op.extent.length, cct->_conf->osd_max_object_size);
 	if (result < 0)
 	  break;
 
@@ -4248,7 +4250,7 @@ int ReplicatedPG::do_osd_ops(OpContext *ctx, vector<OSDOp>& ops)
 	    }
 	  }
 	  ctx->mod_desc.create();
-	  t->append(soid, op.extent.offset, op.extent.length, osd_op.indata, op.flags);
+	  t->append(soid, 0, op.extent.length, osd_op.indata, op.flags);
 	  if (obs.exists) {
 	    map<string, bufferlist> to_set = ctx->obc->attr_cache;
 	    map<string, boost::optional<bufferlist> > &overlay =
@@ -4267,25 +4269,16 @@ int ReplicatedPG::do_osd_ops(OpContext *ctx, vector<OSDOp>& ops)
 	  }
 	} else {
 	  ctx->mod_desc.mark_unrollbackable();
-	  if (obs.exists) {
-	    t->truncate(soid, 0);
+	  t->write(soid, 0, op.extent.length, osd_op.indata, op.flags);
+	  if (obs.exists && op.extent.length < oi.size) {
+	    t->truncate(soid, op.extent.length);
 	  }
-	  t->write(soid, op.extent.offset, op.extent.length, osd_op.indata, op.flags);
 	}
 	maybe_create_new_object(ctx);
 	obs.oi.set_data_digest(osd_op.indata.crc32c(-1));
 
-	interval_set<uint64_t> ch;
-	if (oi.size > 0)
-	  ch.insert(0, oi.size);
-	ctx->modified_ranges.union_of(ch);
-	if (op.extent.length + op.extent.offset != oi.size) {
-	  ctx->delta_stats.num_bytes -= oi.size;
-	  oi.size = op.extent.length + op.extent.offset;
-	  ctx->delta_stats.num_bytes += oi.size;
-	}
-	ctx->delta_stats.num_wr++;
-	ctx->delta_stats.num_wr_kb += SHIFT_ROUND_UP(op.extent.length, 10);
+	write_update_size_and_usage(ctx->delta_stats, oi, ctx->modified_ranges,
+	    0, op.extent.length, true, op.extent.length != oi.size ? true : false);
       }
       break;
 
@@ -4568,6 +4561,10 @@ int ReplicatedPG::do_osd_ops(OpContext *ctx, vector<OSDOp>& ops)
 	string aname;
 	bp.copy(op.xattr.name_len, aname);
 	tracepoint(osd, do_osd_op_pre_rmxattr, soid.oid.name.c_str(), soid.snap.val, aname.c_str());
+	if (!obs.exists || oi.is_whiteout()) {
+	  result = -ENOENT;
+	  break;
+	}
 	string name = "_" + aname;
 	if (pool.info.require_rollback()) {
 	  map<string, boost::optional<bufferlist> > to_set;
@@ -5521,15 +5518,16 @@ void ReplicatedPG::make_writeable(OpContext *ctx)
 
 void ReplicatedPG::write_update_size_and_usage(object_stat_sum_t& delta_stats, object_info_t& oi,
 					       interval_set<uint64_t>& modified, uint64_t offset,
-					       uint64_t length, bool count_bytes)
+					       uint64_t length, bool count_bytes, bool force_changesize)
 {
   interval_set<uint64_t> ch;
   if (length)
     ch.insert(offset, length);
   modified.union_of(ch);
-  if (length && (offset + length > oi.size)) {
+  if (force_changesize || offset + length > oi.size) {
     uint64_t new_size = offset + length;
-    delta_stats.num_bytes += new_size - oi.size;
+    delta_stats.num_bytes -= oi.size;
+    delta_stats.num_bytes += new_size;
     oi.size = new_size;
   }
   delta_stats.num_wr++;
@@ -10557,7 +10555,7 @@ void ReplicatedPG::agent_clear()
 }
 
 // Return false if no objects operated on since start of object hash space
-bool ReplicatedPG::agent_work(int start_max)
+bool ReplicatedPG::agent_work(int start_max, int agent_flush_quota)
 {
   lock();
   if (!agent_state) {
@@ -10661,8 +10659,10 @@ bool ReplicatedPG::agent_work(int start_max)
     }
 
     if (agent_state->flush_mode != TierAgentState::FLUSH_MODE_IDLE &&
-	agent_maybe_flush(obc))
+	agent_flush_quota > 0 && agent_maybe_flush(obc)) {
       ++started;
+      --agent_flush_quota;
+    }
     if (agent_state->evict_mode != TierAgentState::EVICT_MODE_IDLE &&
 	agent_maybe_evict(obc))
       ++started;
@@ -11060,17 +11060,23 @@ bool ReplicatedPG::agent_choose_mode(bool restart, OpRequestRef op)
   // flush mode
   TierAgentState::flush_mode_t flush_mode = TierAgentState::FLUSH_MODE_IDLE;
   uint64_t flush_target = pool.info.cache_target_dirty_ratio_micro;
+  uint64_t flush_high_target = pool.info.cache_target_dirty_high_ratio_micro;
   uint64_t flush_slop = (float)flush_target * g_conf->osd_agent_slop;
-  if (restart || agent_state->flush_mode == TierAgentState::FLUSH_MODE_IDLE)
+  if (restart || agent_state->flush_mode == TierAgentState::FLUSH_MODE_IDLE) {
     flush_target += flush_slop;
-  else
+    flush_high_target += flush_slop;
+  } else {
     flush_target -= MIN(flush_target, flush_slop);
+    flush_high_target -= MIN(flush_high_target, flush_slop);
+  }
 
   if (info.stats.stats_invalid) {
     // idle; stats can't be trusted until we scrub.
     dout(20) << __func__ << " stats invalid (post-split), idle" << dendl;
+  } else if (dirty_micro > flush_high_target) {
+    flush_mode = TierAgentState::FLUSH_MODE_HIGH;
   } else if (dirty_micro > flush_target) {
-    flush_mode = TierAgentState::FLUSH_MODE_ACTIVE;
+    flush_mode = TierAgentState::FLUSH_MODE_LOW;
   }
 
   // evict mode
@@ -11115,6 +11121,10 @@ bool ReplicatedPG::agent_choose_mode(bool restart, OpRequestRef op)
 	    << " -> "
 	    << TierAgentState::get_flush_mode_name(flush_mode)
 	    << dendl;
+    if (flush_mode == TierAgentState::FLUSH_MODE_HIGH)
+      osd->agent_inc_high_count();
+    if (agent_state->flush_mode == TierAgentState::FLUSH_MODE_HIGH)
+      osd->agent_dec_high_count();
     agent_state->flush_mode = flush_mode;
   }
   if (evict_mode != agent_state->evict_mode) {
