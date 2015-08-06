@@ -64,6 +64,8 @@
 // duplicated since it was introduced at the same time as MIN_SIZE_RECOVERY
 #define CEPH_FEATURE_OSD_PROXY_FEATURES (1ULL<<49)  /* overlap w/ above */
 #define CEPH_FEATURE_MON_METADATA (1ULL<<50)
+#define CEPH_FEATURE_ERASURE_CODE_PLUGINS_V3 (1ULL<<53)
+
 /* ... */
 #define CEPH_FEATURE_HAMMER_0_94_4 (1ULL<<55)
 
@@ -151,6 +153,7 @@ static inline unsigned long long ceph_sanitize_features(unsigned long long f) {
 	 CEPH_FEATURE_MDS_QUOTA | \
          CEPH_FEATURE_CRUSH_V4 |	     \
          CEPH_FEATURE_OSD_MIN_SIZE_RECOVERY |		 \
+         CEPH_FEATURE_ERASURE_CODE_PLUGINS_V3 |   \
 	 CEPH_FEATURE_HAMMER_0_94_4 |		 \
 	 0ULL)
 

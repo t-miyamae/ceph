@@ -109,17 +109,6 @@ function SHARE_MON_TEST_get() {
     grep -q "unknown erasure code profile 'WRONG'" $dir/out || return 1
 }
 
-function SHARE_MON_TEST_experimental_shec() {
-    local dir=$1
-    local id=$2
-
-    local profile=shec-profile
-
-    ! ./ceph osd erasure-code-profile set $profile plugin=shec > $dir/out 2>&1 || return 1
-    grep "experimental feature 'shec'" $dir/out || return 1
-    ! ./ceph osd erasure-code-profile ls | grep $profile || return 1
-}
-
 function SHARE_MON_TEST_set_idempotent() {
     local dir=$1
     local id=$2
