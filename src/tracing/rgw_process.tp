@@ -1,0 +1,18 @@
+#include "include/int_types.h"
+
+TRACEPOINT_EVENT(rgw_process, process_request_enter,
+    TP_ARGS(
+        const char*, req_id),
+    TP_FIELDS(
+        ctf_string(req_id, req_id)
+    )
+)
+
+TRACEPOINT_EVENT(rgw_process, process_request_exit,
+    TP_ARGS(
+        const char*, req_id),
+    TP_FIELDS(
+        ctf_string(req_id, req_id)
+    )
+)
+

@@ -1,0 +1,22 @@
+#include "include/int_types.h"
+
+TRACEPOINT_EVENT(rgw_rados, handle_data_enter,
+    TP_ARGS(
+        const char*, req_id,
+        uint64_t, ofs),
+    TP_FIELDS(
+        ctf_string(req_id, req_id)
+        ctf_integer(uint64_t, offset, ofs)
+    )
+)
+
+TRACEPOINT_EVENT(rgw_rados, aio_req_completion,
+    TP_ARGS(
+        const char*, req_id,
+        uint64_t, ofs),
+    TP_FIELDS(
+        ctf_string(req_id, req_id)
+        ctf_integer(uint64_t, offset, ofs)
+    )
+)
+

@@ -1,0 +1,42 @@
+#include "include/int_types.h"
+
+TRACEPOINT_EVENT(rgw_op, put_data1_enter,
+    TP_ARGS(
+        const char*, req_id,
+        uint64_t, ofs),
+    TP_FIELDS(
+        ctf_string(req_id, req_id)
+        ctf_integer(uint64_t, offset, ofs)
+    )
+)
+
+TRACEPOINT_EVENT(rgw_op, put_data1_exit,
+    TP_ARGS(
+        const char*, req_id,
+        uint64_t, ofs),
+    TP_FIELDS(
+        ctf_string(req_id, req_id)
+        ctf_integer(uint64_t, offset, ofs)
+    )
+)
+
+TRACEPOINT_EVENT(rgw_op, put_data2_enter,
+    TP_ARGS(
+        const char*, req_id,
+        uint64_t, ofs),
+    TP_FIELDS(
+        ctf_string(req_id, req_id)
+        ctf_integer(uint64_t, offset, ofs)
+    )
+)
+
+TRACEPOINT_EVENT(rgw_op, put_data2_exit,
+    TP_ARGS(
+        const char*, req_id,
+        uint64_t, ofs),
+    TP_FIELDS(
+        ctf_string(req_id, req_id)
+        ctf_integer(uint64_t, offset, ofs)
+    )
+)
+
