@@ -33,6 +33,16 @@
 
 #define dout_subsys ceph_subsys_rgw
 
+#ifdef WITH_LTTNG
+#define TRACEPOINT_DEFINE
+#define TRACEPOINT_PROBE_DYNAMIC_LINKAGE
+#include "tracing/rgw_op.h"
+#undef TRACEPOINT_PROBE_DYNAMIC_LINKAGE
+#undef TRACEPOINT_DEFINE
+#else
+#define tracepoint(...)
+#endif
+
 using namespace std;
 using ceph::crypto::MD5;
 
@@ -2422,8 +2432,11 @@ void RGWPutObj::execute()
       orig_data = data;
     }
 
+    tracepoint(rgw_op, put_data1_enter, s->req_id.c_str(), ofs);
     op_ret = put_data_and_throttle(processor, data, ofs,
 				  (need_calc_md5 ? &hash : NULL), need_to_wait);
+    tracepoint(rgw_op, put_data1_exit, s->req_id.c_str(), ofs);
+
     if (op_ret < 0) {
       if (!need_to_wait || op_ret != -EEXIST) {
         ldout(s->cct, 20) << "processor->thottle_data() returned ret="
@@ -2453,7 +2466,9 @@ void RGWPutObj::execute()
         goto done;
       }
 
+      tracepoint(rgw_op, put_data2_enter, s->req_id.c_str(), ofs);
       op_ret = put_data_and_throttle(processor, data, ofs, NULL, false);
+      tracepoint(rgw_op, put_data2_exit, s->req_id.c_str(), ofs);
       if (op_ret < 0) {
         goto done;
       }

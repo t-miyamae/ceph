@@ -3126,7 +3126,6 @@ class RGWPutObjProcessor_Atomic : public RGWPutObjProcessor_Aio
 {
   bufferlist first_chunk;
   uint64_t part_size;
-  off_t cur_part_ofs;
   off_t next_part_ofs;
   int cur_part_id;
   off_t data_ofs;
@@ -3140,11 +3139,13 @@ class RGWPutObjProcessor_Atomic : public RGWPutObjProcessor_Aio
   uint64_t olh_epoch;
   string version_id;
 
+public:
+  off_t cur_part_ofs;
+  string unique_tag;
+
 protected:
   rgw_bucket bucket;
   string obj_str;
-
-  string unique_tag;
 
   rgw_obj head_obj;
   rgw_obj cur_obj;

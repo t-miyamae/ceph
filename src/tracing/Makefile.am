@@ -12,7 +12,10 @@ dist_noinst_DATA += \
 	tracing/oprequest.tp \
 	tracing/osd.tp \
 	tracing/pg.tp \
-	tracing/objectstore.tp
+	tracing/objectstore.tp \
+	tracing/rgw_op.tp \
+	tracing/rgw_process.tp \
+	tracing/rgw_rados.tp
 
 if WITH_LTTNG
 libosd_tp_la_SOURCES = \
@@ -59,11 +62,44 @@ libos_tp_la_CFLAGS = -I$(top_srcdir)/src/tracing -I$(top_srcdir)/src $(AM_CFLAGS
 libos_tp_la_LDFLAGS = -version-info 1:0:0
 
 if WITH_LTTNG
+librgw_op_tp_la_SOURCES = \
+        tracing/rgw_op.c
+nodist_librgw_op_tp_la_SOURCES = \
+        tracing/rgw_op.h
+endif
+librgw_op_tp_la_LIBADD = -ldl -llttng-ust
+librgw_op_tp_la_CFLAGS = -I$(top_srcdir)/src/tracing -I$(top_srcdir)/src $(AM_CFLAGS) -fpic
+librgw_op_tp_la_LDFLAGS = -version-info 1:0:0
+
+if WITH_LTTNG
+librgw_process_tp_la_SOURCES = \
+        tracing/rgw_process.c
+nodist_librgw_process_tp_la_SOURCES = \
+        tracing/rgw_process.h
+endif
+librgw_process_tp_la_LIBADD = -ldl -llttng-ust
+librgw_process_tp_la_CFLAGS = -I$(top_srcdir)/src/tracing -I$(top_srcdir)/src $(AM_CFLAGS) -fpic
+librgw_process_tp_la_LDFLAGS = -version-info 1:0:0
+
+if WITH_LTTNG
+librgw_rados_tp_la_SOURCES = \
+        tracing/rgw_rados.c
+nodist_librgw_rados_tp_la_SOURCES = \
+        tracing/rgw_rados.h
+endif
+librgw_rados_tp_la_LIBADD = -ldl -llttng-ust
+librgw_rados_tp_la_CFLAGS = -I$(top_srcdir)/src/tracing -I$(top_srcdir)/src $(AM_CFLAGS) -fpic
+librgw_rados_tp_la_LDFLAGS = -version-info 1:0:0
+
+if WITH_LTTNG
 lib_LTLIBRARIES += \
 	libosd_tp.la \
 	libos_tp.la \
 	librados_tp.la \
-	librbd_tp.la
+	librbd_tp.la \
+	librgw_op_tp.la \
+	librgw_process_tp.la \
+	librgw_rados_tp.la
 
 BUILT_SOURCES += \
 	tracing/librados.h \
@@ -71,7 +107,10 @@ BUILT_SOURCES += \
 	tracing/objectstore.h \
 	tracing/oprequest.h \
 	tracing/osd.h \
-	tracing/pg.h
+	tracing/pg.h \
+	tracing/rgw_op.h \
+	tracing/rgw_process.h \
+	tracing/rgw_rados.h
 endif
 
 CLEANFILES += \

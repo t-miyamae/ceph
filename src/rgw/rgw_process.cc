@@ -15,6 +15,16 @@
 
 #define dout_subsys ceph_subsys_rgw
 
+#ifdef WITH_LTTNG
+#define TRACEPOINT_DEFINE
+#define TRACEPOINT_PROBE_DYNAMIC_LINKAGE
+#include "tracing/rgw_process.h"
+#undef TRACEPOINT_PROBE_DYNAMIC_LINKAGE
+#undef TRACEPOINT_DEFINE
+#else
+#define tracepoint(...)
+#endif
+
 void RGWProcess::RGWWQ::_dump_queue()
 {
   if (!g_conf->subsys.should_gather(ceph_subsys_rgw, 20)) {
@@ -60,6 +70,8 @@ int process_request(RGWRados* store, RGWREST* rest, RGWRequest* req,
   s->host_id = store->host_id;
 
   req->log_format(s, "initializing for trans_id = %s", s->trans_id.c_str());
+
+  tracepoint(rgw_process, process_request_enter, s->req_id.c_str());
 
   RGWOp* op = NULL;
   int init_error = 0;
@@ -175,6 +187,8 @@ int process_request(RGWRados* store, RGWREST* rest, RGWRequest* req,
   req->log(s, "completing");
   op->complete();
 done:
+  tracepoint(rgw_process, process_request_exit, s->req_id.c_str());
+
   int r = client_io->complete_request();
   if (r < 0) {
     dout(0) << "ERROR: client_io->complete_request() returned " << r << dendl;

@@ -63,6 +63,16 @@ using namespace librados;
 
 #define MAX_BUCKET_INDEX_SHARDS_PRIME 7877
 
+#ifdef WITH_LTTNG
+#define TRACEPOINT_DEFINE
+#define TRACEPOINT_PROBE_DYNAMIC_LINKAGE
+#include "tracing/rgw_rados.h"
+#undef TRACEPOINT_PROBE_DYNAMIC_LINKAGE
+#undef TRACEPOINT_DEFINE
+#else
+#define tracepoint(...)
+#endif
+
 using namespace std;
 
 static RGWCache<RGWRados> cached_rados_provider;
@@ -2182,7 +2192,7 @@ int RGWPutObjProcessor_Aio::handle_obj_data(rgw_obj& obj, bufferlist& bl, off_t 
 
   // For the first call pass -1 as the offset to
   // do a write_full.
-  int r = store->aio_put_obj_data(NULL, obj,
+  int r = store->aio_put_obj_data(this, obj,
                                      bl,
                                      ((ofs != 0) ? ofs : -1),
                                      exclusive, phandle);
@@ -2277,6 +2287,7 @@ int RGWPutObjProcessor_Atomic::write_data(bufferlist& bl, off_t ofs, void **phan
 int RGWPutObjProcessor_Atomic::handle_data(bufferlist& bl, off_t ofs, MD5 *hash, void **phandle, bool *again)
 {
   *again = false;
+  tracepoint(rgw_rados, handle_data_enter, this->unique_tag.c_str(), this->cur_part_ofs);
 
   *phandle = NULL;
   if (extra_data_len) {
@@ -6081,13 +6092,15 @@ int RGWRados::put_obj_data(void *ctx, rgw_obj& obj,
   void *handle;
   bufferlist bl;
   bl.append(data, len);
-  int r = aio_put_obj_data(ctx, obj, bl, ofs, exclusive, &handle);
+  int r = aio_put_obj_data(NULL, obj, bl, ofs, exclusive, &handle);
   if (r < 0)
     return r;
   return aio_wait(handle);
 }
 
-int RGWRados::aio_put_obj_data(void *ctx, rgw_obj& obj, bufferlist& bl,
+static void aio_req_completion(librados::completion_t cb, void *arg);
+
+int RGWRados::aio_put_obj_data(void *processor, rgw_obj& obj, bufferlist& bl,
 			       off_t ofs, bool exclusive,
                                void **handle)
 {
@@ -6098,7 +6111,8 @@ int RGWRados::aio_put_obj_data(void *ctx, rgw_obj& obj, bufferlist& bl,
     return r;
   }
 
-  AioCompletion *c = librados::Rados::aio_create_completion(NULL, NULL, NULL);
+  AioCompletion *c = librados::Rados::aio_create_completion((void *)processor,
+          aio_req_completion, NULL);
   *handle = c;
   
   ObjectWriteOperation op;
@@ -6131,6 +6145,14 @@ bool RGWRados::aio_completed(void *handle)
 {
   AioCompletion *c = (AioCompletion *)handle;
   return c->is_complete();
+}
+
+static void aio_req_completion(librados::completion_t cb, void *arg)
+{
+  RGWPutObjProcessor_Atomic *p;
+  p = (RGWPutObjProcessor_Atomic *)arg;
+
+  tracepoint(rgw_rados, aio_req_completion, p->unique_tag.c_str(), p->cur_part_ofs);
 }
 
 class RGWRadosPutObj : public RGWGetDataCB
